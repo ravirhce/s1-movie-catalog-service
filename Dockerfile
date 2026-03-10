@@ -1,24 +1,14 @@
-#
-# Build stage
-#
-FROM maven:3.6.3-jdk-8 AS build
-COPY src /home/app/src
-COPY pom.xml /home/app
-RUN mvn -f /home/app/pom.xml clean package
+FROM maven:3.9.9-eclipse-temurin-11 AS build
+WORKDIR /workspace
 
-#
-# Package stage
-#
-FROM openjdk:8
-COPY --from=build /home/app/target/s1-movie-catalog-service-0.0.1-SNAPSHOT.jar /usr/local/lib/tsrana.jar
+COPY pom.xml .
+COPY src ./src
+RUN mvn -B clean package -DskipTests
+
+FROM eclipse-temurin:11-jre
+WORKDIR /app
+
+COPY --from=build /workspace/target/s1-movie-catalog-service-0.0.1-SNAPSHOT.jar /app/app.jar
+
 EXPOSE 8081
-ENTRYPOINT ["java","-jar","/usr/local/lib/tsrana.jar"]
-
-
-
-
-
-#FROM openjdk:8
-#ADD target/s1-movie-catalog-service-0.0.1-SNAPSHOT.jar s1-movie-catalog-service-0.0.1-SNAPSHOT.jar
-#EXPOSE 8081
-#ENTRYPOINT ["java", "-jar", "s1-movie-catalog-service-0.0.1-SNAPSHOT.jar"]
+ENTRYPOINT ["java", "-jar", "/app/app.jar"]
